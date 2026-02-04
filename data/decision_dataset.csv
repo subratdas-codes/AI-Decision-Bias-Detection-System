@@ -1,0 +1,11 @@
+expected_salary,recent_event_impact,emotional_state,ignored_alternative_options,label
+50000,False,calm,False,Rational
+60000,False,calm,False,Rational
+150000,True,excited,True,Biased
+120000,True,fear,True,Biased
+80000,True,calm,False,Risky
+90000,True,calm,False,Risky
+140000,False,angry,True,Biased
+70000,False,calm,True,Risky
+55000,False,calm,False,Rational
+130000,True,excited,True,Biased

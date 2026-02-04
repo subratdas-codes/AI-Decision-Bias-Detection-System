@@ -1,0 +1,9 @@
+Salary,Emotion,Recent Event,Ignored Options,Prediction,Score
+330000,excited,True,False,Biased,30
+1800000,calm,False,False,Biased,75
+0,calm,False,False,Rational,100
+657900,excited,True,False,Biased,30
+47690,fear,False,True,Rational,55
+47690,fear,False,True,Rational,55
+47690,fear,False,True,Rational,55
+47690,fear,False,True,Rational,55
