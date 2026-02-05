@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -13,10 +14,11 @@ from ml_model.predict_model import predict_decision
 from utils.history_manager import save_history, load_history, delete_record, delete_all
 from utils.report_generator import generate_pdf
 from utils.nlp_analyzer import analyze_text_decision
-from utils.auth_manager import signup, login
+from utils.auth_manager import signup, login, change_password, delete_user_account
 from utils.chat_assistant import generate_chat_response
 from ui.admin_dashboard import admin_dashboard
-
+from ui.profile_page import profile_page
+from utils.otp_manager import generate_otp, send_email_otp, send_mobile_otp
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
@@ -114,7 +116,9 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
 
-# ---------------- LOGIN / SIGNUP ----------------
+# =====================================================
+# 🔐 LOGIN / SIGNUP SECTION
+# =====================================================
 if st.session_state.user is None:
 
     st.markdown("""
@@ -129,28 +133,107 @@ if st.session_state.user is None:
     st.write("")
 
     option = st.selectbox("Select Option", ["Login", "Signup"])
-    username = st.text_input("👤 Username")
-    password = st.text_input("🔑 Password", type="password")
 
+    # ================= SIGNUP =================
     if option == "Signup":
-        if st.button("Create Account", use_container_width=True):
-            if signup(username, password):
-                st.success("Account created successfully 🎉")
-            else:
-                st.error("Username already exists")
 
+        username = st.text_input("Username")
+        email = st.text_input("Email")
+        mobile = st.text_input("Mobile Number")
+        password = st.text_input("Password", type="password")
+
+        if "otp_sent" not in st.session_state:
+            st.session_state.otp_sent = False
+
+        # -------- SEND OTP --------
+        if not st.session_state.otp_sent:
+
+            if st.button("Create Account"):
+
+                if username and email and mobile and password:
+
+                    otp = generate_otp()
+
+                    email_status = send_email_otp(email, otp)
+                    send_mobile_otp(mobile, otp)  # simulation
+
+                    if email_status:
+
+                        st.session_state.temp_signup = {
+                            "username": username,
+                            "email": email,
+                            "mobile": mobile,
+                            "password": password
+                        }
+
+                        st.session_state.signup_otp = otp
+                        st.session_state.otp_time = time.time()
+                        st.session_state.otp_sent = True
+
+                        st.success("OTP sent to Email (Mobile OTP simulated)")
+
+                    else:
+                        st.error("Failed to send Email OTP")
+
+                else:
+                    st.error("Fill all fields")
+
+
+        # -------- VERIFY OTP --------
+        if st.session_state.otp_sent:
+
+            otp_input = st.text_input("Enter OTP")
+
+            if st.button("Verify OTP"):
+
+                # OTP expiry → 5 minutes
+                if time.time() - st.session_state.otp_time > 300:
+                    st.error("OTP expired")
+                    st.session_state.otp_sent = False
+
+                elif otp_input == st.session_state.signup_otp:
+
+                    data = st.session_state.temp_signup
+
+                    if signup(
+                        data["username"],
+                        data["email"],
+                        data["mobile"],
+                        data["password"]
+                    ):
+                        st.success("Account Created Successfully")
+                        st.session_state.otp_sent = False
+
+                    else:
+                        st.error("User already exists")
+
+                else:
+                    st.error("Invalid OTP")
+
+
+    # ================= LOGIN =================
     if option == "Login":
-        if st.button("Login", use_container_width=True):
-            if login(username, password):
-                st.session_state.user = username
+
+        identifier = st.text_input("Username / Email / Mobile")
+        password = st.text_input("Password", type="password")
+
+        if st.button("Login"):
+
+            user = login(identifier, password)
+
+            if user:
+                st.session_state.user = user
                 st.rerun()
             else:
-                st.error("Invalid credentials")
+                st.error("Invalid Credentials")
 
     st.stop()
 
 
-# ---------------- SIDEBAR ----------------
+
+# =====================================================
+# SIDEBAR
+# =====================================================
 st.sidebar.title("🧠 AI Decision System")
 st.sidebar.info("Behavioral Bias Detection Tool")
 st.sidebar.write(f"👤 Logged in as: {st.session_state.user}")
@@ -159,14 +242,33 @@ if st.sidebar.button("Logout"):
     st.session_state.user = None
     st.rerun()
 
+page = st.sidebar.radio("Navigation", ["Dashboard", "Profile"])
 
-# ---------------- ADMIN ----------------
+if page == "Profile":
+    profile_page(st.session_state.user)
+    st.stop()
+
+
+
+
+
+# -------- DELETE ACCOUNT --------
+if st.sidebar.button("🗑 Delete My Account"):
+
+    delete_user_account(st.session_state.user)
+    st.session_state.user = None
+    st.rerun()
+
+
+# -------- ADMIN ACCESS --------
 if st.session_state.user == "admin":
     admin_dashboard()
     st.stop()
 
 
-# ---------------- MAIN ----------------
+# =====================================================
+# MAIN DASHBOARD
+# =====================================================
 st.title("🧠 AI Decision Bias Detection & Correction")
 st.write("Analyze decision patterns using AI + ML + Behavioral Science")
 st.divider()
@@ -189,7 +291,9 @@ ignore_options = st.checkbox("🚫 Ignored Alternative Options")
 analyze = st.button("🔍 Analyze Decision", use_container_width=True)
 
 
-# ---------------- NLP ----------------
+# =====================================================
+# NLP ANALYZER
+# =====================================================
 st.divider()
 st.subheader("📝 NLP Text Analyzer")
 
@@ -197,15 +301,16 @@ decision_text = st.text_area("Describe your decision")
 
 if st.button("Analyze Text"):
     if decision_text:
-        result = analyze_text_decision(decision_text)
-        st.success("Text Analysis Complete")
-        for r in result:
-            st.write("•", r)
+        text_bias = analyze_text_decision(decision_text)
+        for tb in text_bias:
+            st.write("•", tb)
     else:
         st.warning("Please enter text")
 
 
-# ---------------- RESULT ----------------
+# =====================================================
+# RESULT
+# =====================================================
 if analyze:
     decision_data = {
         "expected_salary": salary,
@@ -219,14 +324,12 @@ if analyze:
     score = calculate_decision_score(bias_result)
     prediction = predict_decision(decision_data)
 
-    save_history(st.session_state.user, {
+    record = {
         "Salary": salary,
         "Emotion": emotion,
         "Prediction": prediction,
         "Score": score
-    })
-
-    st.divider()
+    }
 
     colA, colB = st.columns(2)
     colA.metric("📊 Decision Score", f"{score}/100")
@@ -234,7 +337,8 @@ if analyze:
 
     st.progress(score / 100)
 
-    with st.expander("🔍 Bias Analysis", expanded=True):
+
+    with st.expander("🔍 Bias Analysis Result", expanded=True):
         for b in bias_result:
             st.write("•", b)
 
@@ -242,20 +346,44 @@ if analyze:
         for s in suggestions:
             st.write("•", s)
 
+
+    # -------- GAUGE CHART --------
+    if score >= 80:
+        risk = "Low Risk"
+        color = "green"
+    elif score >= 50:
+        risk = "Moderate Risk"
+        color = "orange"
+    else:
+        risk = "High Risk"
+        color = "red"
+
     gauge = go.Figure(go.Indicator(
         mode="gauge+number",
         value=score,
-        gauge={'axis': {'range': [0, 100]}}
+        title={'text': "Decision Quality Score"},
+        gauge={'axis': {'range': [0, 100]},
+               'bar': {'color': color}}
     ))
 
     st.plotly_chart(gauge, use_container_width=True)
 
-    pdf = generate_pdf(decision_data, bias_result, suggestions, score, prediction, "Risk")
-    with open(pdf, "rb") as f:
-        st.download_button("📄 Download Report", f)
+    pdf_file = generate_pdf(
+        decision_data,
+        bias_result,
+        suggestions,
+        score,
+        prediction,
+        risk
+    )
+
+    with open(pdf_file, "rb") as f:
+        st.download_button("📄 Download Decision Report", f)
 
 
-# ---------------- CHAT ----------------
+# =====================================================
+# CHAT ASSISTANT
+# =====================================================
 st.divider()
 st.subheader("🤖 AI Decision Assistant")
 
@@ -270,11 +398,27 @@ for sender, text in st.session_state.chat_history:
     st.write(f"**{sender}:** {text}")
 
 
-# ---------------- HISTORY ----------------
+# =====================================================
+# HISTORY
+# =====================================================
 st.divider()
 st.subheader("📜 Decision History")
 
-history = load_history(st.session_state.user)
+history_df = load_history(st.session_state.user)
+
+if not history_df.empty:
+
+    st.dataframe(history_df, use_container_width=True)
+
+    record_id = st.number_input("Enter Record ID to Delete", min_value=0)
+
+    if st.button("Delete Selected Record"):
+        delete_record(record_id)
+        st.rerun()
+
+    if st.button("Clear All History"):
+        delete_all(st.session_state.user)
+        st.rerun()
 
 if not history.empty:
     st.dataframe(history, use_container_width=True)
