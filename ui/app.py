@@ -18,16 +18,95 @@ from utils.chat_assistant import generate_chat_response
 from ui.admin_dashboard import admin_dashboard
 
 
-
-# -------- PAGE CONFIG --------
+# ---------------- PAGE CONFIG ----------------
 st.set_page_config(
     page_title="AI Decision Intelligence",
     page_icon="🧠",
     layout="centered"
 )
 
+# ---------------- GLOBAL CSS ----------------
+st.markdown("""
+<style>
 
-# -------- SESSION --------
+/* REMOVE STREAMLIT DEFAULT UI */
+header[data-testid="stHeader"] {display: none;}
+div[data-testid="stToolbar"] {display: none;}
+footer {visibility: hidden;}
+
+/* BACKGROUND */
+.stApp {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* CENTER CONTAINER */
+.block-container {
+    padding-top: 2rem;
+    max-width: 800px;
+}
+
+/* GLASS CARD */
+.glass {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(16px);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+}
+
+/* TEXT */
+h1, h2, h3, label, p, span {
+    color: white !important;
+}
+
+/* INPUTS */
+input, textarea, select {
+    background: rgba(255,255,255,0.95) !important;
+    color: black !important;
+    border-radius: 12px !important;
+    font-weight: 600;
+}
+
+/* FIX NUMBER INPUT VISIBILITY */
+input[type="number"] {
+    color: black !important;
+    font-weight: 700 !important;
+}
+
+input[type="number"]::placeholder {
+    color: #444 !important;
+}
+
+/* FIX +/- BUTTON */
+button[kind="secondary"] {
+    color: black !important;
+}
+
+/* BUTTONS */
+button {
+    background: linear-gradient(135deg, #00c6ff, #0072ff) !important;
+    color: white !important;
+    border-radius: 14px !important;
+    height: 45px;
+    font-weight: bold;
+    border: none;
+}
+
+button:hover {
+    transform: scale(1.03);
+}
+
+/* SIDEBAR */
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #141e30, #243b55);
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
+# ---------------- SESSION ----------------
 if "user" not in st.session_state:
     st.session_state.user = None
 
@@ -35,25 +114,33 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
 
-# -------- LOGIN --------
+# ---------------- LOGIN / SIGNUP ----------------
 if st.session_state.user is None:
 
-    st.title("🔐 Login / Signup")
+    st.markdown("""
+    <div class="glass">
+        <h1>🔐 Welcome to AI Decision Intelligence</h1>
+        <p style="text-align:center; font-size:18px;">
+            Detect • Analyze • Correct Human Decision Bias
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.write("")
 
     option = st.selectbox("Select Option", ["Login", "Signup"])
-
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
+    username = st.text_input("👤 Username")
+    password = st.text_input("🔑 Password", type="password")
 
     if option == "Signup":
-        if st.button("Create Account"):
+        if st.button("Create Account", use_container_width=True):
             if signup(username, password):
-                st.success("Account created successfully")
+                st.success("Account created successfully 🎉")
             else:
                 st.error("Username already exists")
 
     if option == "Login":
-        if st.button("Login"):
+        if st.button("Login", use_container_width=True):
             if login(username, password):
                 st.session_state.user = username
                 st.rerun()
@@ -63,7 +150,7 @@ if st.session_state.user is None:
     st.stop()
 
 
-# -------- SIDEBAR --------
+# ---------------- SIDEBAR ----------------
 st.sidebar.title("🧠 AI Decision System")
 st.sidebar.info("Behavioral Bias Detection Tool")
 st.sidebar.write(f"👤 Logged in as: {st.session_state.user}")
@@ -72,33 +159,29 @@ if st.sidebar.button("Logout"):
     st.session_state.user = None
     st.rerun()
 
-# -------- ADMIN ACCESS --------
-if st.session_state.user == "admin":
 
+# ---------------- ADMIN ----------------
+if st.session_state.user == "admin":
     admin_dashboard()
     st.stop()
 
 
-
-# -------- MAIN TITLE --------
+# ---------------- MAIN ----------------
 st.title("🧠 AI Decision Bias Detection & Correction")
-st.write("Analyze human decision patterns using AI + ML + Behavioral Intelligence")
+st.write("Analyze decision patterns using AI + ML + Behavioral Science")
 st.divider()
 
 
-# -------- INPUT --------
-st.subheader("📥 Enter Decision Details")
+# ---------------- INPUT ----------------
+st.subheader("📥 Decision Inputs")
 
 col1, col2 = st.columns(2)
 
 with col1:
-    salary = st.number_input("💰 Expected Salary", min_value=0)
+    salary = st.number_input("💰 Expected Salary", min_value=0, value=50000)
 
 with col2:
-    emotion = st.selectbox(
-        "😊 Emotional State",
-        ["calm", "excited", "fear", "angry"]
-    )
+    emotion = st.selectbox("😊 Emotional State", ["calm", "excited", "fear", "angry"])
 
 recent_event = st.checkbox("⚡ Recent Event Influence")
 ignore_options = st.checkbox("🚫 Ignored Alternative Options")
@@ -106,25 +189,24 @@ ignore_options = st.checkbox("🚫 Ignored Alternative Options")
 analyze = st.button("🔍 Analyze Decision", use_container_width=True)
 
 
-# -------- NLP ANALYZER --------
+# ---------------- NLP ----------------
 st.divider()
-st.subheader("📝 NLP Decision Text Analyzer")
+st.subheader("📝 NLP Text Analyzer")
 
 decision_text = st.text_area("Describe your decision")
 
-if st.button("Analyze Text Decision"):
+if st.button("Analyze Text"):
     if decision_text:
-        text_bias = analyze_text_decision(decision_text)
+        result = analyze_text_decision(decision_text)
         st.success("Text Analysis Complete")
-        for tb in text_bias:
-            st.write("•", tb)
+        for r in result:
+            st.write("•", r)
     else:
         st.warning("Please enter text")
 
 
-# -------- RESULT --------
+# ---------------- RESULT ----------------
 if analyze:
-
     decision_data = {
         "expected_salary": salary,
         "recent_event_impact": recent_event,
@@ -137,133 +219,64 @@ if analyze:
     score = calculate_decision_score(bias_result)
     prediction = predict_decision(decision_data)
 
-    # Save History
-    record = {
+    save_history(st.session_state.user, {
         "Salary": salary,
         "Emotion": emotion,
-        "Recent Event": recent_event,
-        "Ignored Options": ignore_options,
         "Prediction": prediction,
         "Score": score
-    }
-
-    save_history(st.session_state.user, record)
+    })
 
     st.divider()
 
-    # -------- METRIC CARDS --------
     colA, colB = st.columns(2)
     colA.metric("📊 Decision Score", f"{score}/100")
     colB.metric("🤖 ML Classification", prediction)
 
     st.progress(score / 100)
 
-    st.divider()
-
-    # -------- BIAS --------
-    with st.expander("🔍 Bias Analysis Result", expanded=True):
+    with st.expander("🔍 Bias Analysis", expanded=True):
         for b in bias_result:
             st.write("•", b)
 
-    # -------- SUGGESTIONS --------
     with st.expander("💡 Correction Suggestions", expanded=True):
         for s in suggestions:
             st.write("•", s)
 
-    # -------- DASHBOARD --------
-    with st.expander("📊 Interactive Score Dashboard", expanded=True):
+    gauge = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=score,
+        gauge={'axis': {'range': [0, 100]}}
+    ))
 
-        if score >= 80:
-            risk = "Low Risk / Rational Decision"
-            color = "green"
-        elif score >= 50:
-            risk = "Moderate Risk"
-            color = "orange"
-        else:
-            risk = "High Risk / Biased Decision"
-            color = "red"
+    st.plotly_chart(gauge, use_container_width=True)
 
-        st.markdown(f"### Risk Level: :{color}[{risk}]")
-
-        # Gauge Chart
-        gauge = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=score,
-            title={'text': "Decision Quality Score"},
-            gauge={'axis': {'range': [0, 100]},
-                   'bar': {'color': color}}
-        ))
-
-        st.plotly_chart(gauge, use_container_width=True)
-
-        # Bar Chart
-        bar = go.Figure(data=[go.Bar(
-            x=["Decision Score"],
-            y=[score],
-            marker_color=color
-        )])
-
-        bar.update_layout(yaxis=dict(range=[0, 100]))
-        st.plotly_chart(bar, use_container_width=True)
-
-        st.info(f"Decision achieved {score}% quality rating.")
-
-    # -------- PDF --------
-    pdf_file = generate_pdf(
-        decision_data,
-        bias_result,
-        suggestions,
-        score,
-        prediction,
-        risk
-    )
-
-    with open(pdf_file, "rb") as f:
-        st.download_button("📄 Download Decision Report", f)
+    pdf = generate_pdf(decision_data, bias_result, suggestions, score, prediction, "Risk")
+    with open(pdf, "rb") as f:
+        st.download_button("📄 Download Report", f)
 
 
-# -------- CHAT --------
+# ---------------- CHAT ----------------
 st.divider()
-st.subheader("🤖 AI Chat Decision Assistant")
+st.subheader("🤖 AI Decision Assistant")
 
-user_msg = st.text_input("Ask AI about your decision")
+msg = st.text_input("Ask AI about your decision")
 
-if st.button("Send Message"):
-    if user_msg:
-        reply = generate_chat_response(user_msg)
-        st.session_state.chat_history.append(("You", user_msg))
-        st.session_state.chat_history.append(("AI", reply))
+if st.button("Send"):
+    reply = generate_chat_response(msg)
+    st.session_state.chat_history.append(("You", msg))
+    st.session_state.chat_history.append(("AI", reply))
 
-for sender, msg in st.session_state.chat_history:
-    if sender == "You":
-        st.write(f"👤 **You:** {msg}")
-    else:
-        st.write(f"🤖 **AI:** {msg}")
+for sender, text in st.session_state.chat_history:
+    st.write(f"**{sender}:** {text}")
 
 
-# -------- HISTORY --------
+# ---------------- HISTORY ----------------
 st.divider()
-st.subheader("📜 Your Decision History")
+st.subheader("📜 Decision History")
 
-history_df = load_history(st.session_state.user)
+history = load_history(st.session_state.user)
 
-if not history_df.empty:
-
-    st.dataframe(history_df, use_container_width=True)
-
-    st.subheader("🛠 Manage History")
-
-    record_id = st.number_input("Enter Record ID to Delete", min_value=0)
-
-    if st.button("Delete Selected Record"):
-        delete_record(record_id)
-        st.success("Record Deleted")
-        st.rerun()
-
-    if st.button("Clear All History"):
-        delete_all(st.session_state.user)
-        st.success("All History Deleted")
-        st.rerun()
-
+if not history.empty:
+    st.dataframe(history, use_container_width=True)
 else:
-    st.write("No history available yet.")
+    st.info("No history yet")
