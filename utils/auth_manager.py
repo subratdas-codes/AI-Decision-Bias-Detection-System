@@ -1,13 +1,16 @@
 import sqlite3
 import hashlib
 
-
-# -------- DATABASE CONNECTION --------
+# =====================================
+# DATABASE CONNECTION
+# =====================================
 conn = sqlite3.connect("users.db", check_same_thread=False)
 cursor = conn.cursor()
 
 
-# -------- CREATE USERS TABLE --------
+# =====================================
+# CREATE USERS TABLE
+# =====================================
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users(
     username TEXT PRIMARY KEY,
@@ -16,19 +19,41 @@ CREATE TABLE IF NOT EXISTS users(
     password TEXT
 )
 """)
-
 conn.commit()
 
 
 # =====================================
-# ⭐ PASSWORD HASH
+# PASSWORD HASH
 # =====================================
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 
 # =====================================
-# ⭐ SIGNUP
+# CHECK USER EXISTS
+# =====================================
+def user_exists(username=None, email=None, mobile=None):
+
+    if username:
+        cursor.execute("SELECT 1 FROM users WHERE username=?", (username,))
+        if cursor.fetchone():
+            return True
+
+    if email:
+        cursor.execute("SELECT 1 FROM users WHERE email=?", (email,))
+        if cursor.fetchone():
+            return True
+
+    if mobile:
+        cursor.execute("SELECT 1 FROM users WHERE mobile=?", (mobile,))
+        if cursor.fetchone():
+            return True
+
+    return False
+
+
+# =====================================
+# SIGNUP
 # =====================================
 def signup(username, email, mobile, password):
 
@@ -50,7 +75,7 @@ def signup(username, email, mobile, password):
 
 
 # =====================================
-# ⭐ LOGIN
+# LOGIN
 # =====================================
 def login(identifier, password):
 
@@ -66,15 +91,11 @@ def login(identifier, password):
     ))
 
     result = cursor.fetchone()
-
-    if result:
-        return result[0]
-
-    return None
+    return result[0] if result else None
 
 
 # =====================================
-# ⭐ GET USER DETAILS
+# GET USER DETAILS
 # =====================================
 def get_user_details(username):
 
@@ -87,7 +108,7 @@ def get_user_details(username):
 
 
 # =====================================
-# ⭐ CHANGE PASSWORD
+# CHANGE PASSWORD
 # =====================================
 def change_password(username, old_pass, new_pass):
 
@@ -114,7 +135,7 @@ def change_password(username, old_pass, new_pass):
 
 
 # =====================================
-# ⭐ UPDATE EMAIL
+# UPDATE EMAIL
 # =====================================
 def update_email(username, new_email):
 
@@ -131,7 +152,7 @@ def update_email(username, new_email):
 
 
 # =====================================
-# ⭐ UPDATE MOBILE
+# UPDATE MOBILE
 # =====================================
 def update_mobile(username, new_mobile):
 
@@ -148,7 +169,7 @@ def update_mobile(username, new_mobile):
 
 
 # =====================================
-# ⭐ DELETE ACCOUNT
+# DELETE USER ACCOUNT
 # =====================================
 def delete_user_account(username):
 
@@ -160,12 +181,34 @@ def delete_user_account(username):
 
 
 # =====================================
-# ⭐ ADMIN – GET ALL USERS
+# GET USERNAME BY EMAIL
 # =====================================
-def get_all_users():
+def get_username_by_email(email):
 
-    cursor.execute("""
-    SELECT username, email, mobile FROM users
-    """)
+    cursor.execute(
+        "SELECT username FROM users WHERE email=?",
+        (email,)
+    )
 
-    return cursor.fetchall()
+    result = cursor.fetchone()
+    return result[0] if result else None
+
+
+# =====================================
+# RESET PASSWORD USING EMAIL
+# =====================================
+def reset_password_by_email(email, new_password):
+
+    try:
+        cursor.execute("""
+        UPDATE users SET password=? WHERE email=?
+        """, (
+            hash_password(new_password),
+            email
+        ))
+
+        conn.commit()
+        return True
+
+    except:
+        return False

@@ -4,9 +4,7 @@ import os
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
 
-# =====================================
-# LOAD ENV VARIABLES
-# =====================================
+# Load environment variables
 load_dotenv()
 
 SENDER_EMAIL = os.getenv("EMAIL_USER")
@@ -14,14 +12,14 @@ APP_PASSWORD = os.getenv("EMAIL_PASS")
 
 
 # =====================================
-# ⭐ GENERATE OTP
+# GENERATE OTP
 # =====================================
 def generate_otp():
     return str(random.randint(100000, 999999))
 
 
 # =====================================
-# ⭐ SEND EMAIL OTP (REAL)
+# SEND EMAIL OTP
 # =====================================
 def send_email_otp(receiver_email, otp):
 
@@ -34,7 +32,7 @@ Your OTP for verification is:
 
 OTP: {otp}
 
-⚠️ This OTP will expire in 5 minutes.
+This OTP will expire in 5 minutes.
 Do not share this OTP with anyone.
 
 Thank You,
@@ -56,16 +54,5 @@ AI Decision System
         return True
 
     except Exception as e:
-        print("❌ Email OTP Error:", e)
+        print("Email OTP Error:", e)
         return False
-
-
-# =====================================
-# ⭐ MOBILE OTP SIMULATION
-# =====================================
-def send_mobile_otp(mobile, otp):
-
-    # Simulation Only (For College Project)
-    print(f"[SIMULATION] Mobile OTP for {mobile}: {otp}")
-
-    return True

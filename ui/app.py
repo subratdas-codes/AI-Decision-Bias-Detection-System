@@ -1,213 +1,149 @@
 import sys
 import os
-import time
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import streamlit as st
-import plotly.graph_objects as go
 
-from rule_engine.bias_rules import detect_bias
-from utils.correction_engine import suggest_corrections
-from ml_model.decision_scoring import calculate_decision_score
-from ml_model.predict_model import predict_decision
-from utils.history_manager import load_history
-from utils.report_generator import generate_pdf
-from utils.nlp_analyzer import analyze_text_decision
-from utils.chat_assistant import generate_chat_response
+# -------- PAGE IMPORTS --------
+from ui.custom_pages.home_page import home_page
+from ui.custom_pages.about_page import about_page
+from ui.custom_pages.services_page import services_page
 
-from ui.navbar import show_navbar
-from ui.home_page import show_home_page
-from ui.auth_page import show_auth_page
+from ui.admin_dashboard import admin_dashboard
+from ui.profile_page import profile_page
 
+# ⭐ AUTH PAGES
+from ui.auth_pages.user_login_page import user_login_page
+from ui.auth_pages.admin_login_page import admin_login_page
+from ui.auth_pages.signup_page import signup_page
+from ui.auth_pages.forgot_password_page import forgot_password_page
 
-# ---------------- PAGE CONFIG ----------------
+# -------- COMPONENTS --------
+from ui.components.navbar import navbar
+from ui.components.footer import footer
+
+# -------- STYLE IMPORTS --------
+from ui.styles.global_style import load_global_style
+from ui.styles.auth_style import load_auth_style
+
+# =====================================
+# PAGE CONFIG
+# =====================================
 st.set_page_config(
     page_title="AI Decision Intelligence",
     page_icon="🧠",
-    layout="centered"
+    layout="wide"
 )
 
-# ---------------- GLOBAL CSS ----------------
-st.markdown("""
-<style>
-header[data-testid="stHeader"] {display:none;}
-div[data-testid="stToolbar"] {display:none;}
-footer {visibility:hidden;}
 
-.stApp {
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    font-family: 'Segoe UI', sans-serif;
-}
+# =====================================
+# LOAD FRONTEND STYLES
+# =====================================
+load_global_style()
+load_auth_style()
 
-.block-container {
-    padding-top: 2rem;
-    max-width: 900px;
-}
 
-.glass {
-    background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(16px);
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
-}
-
-h1, h2, h3 { color: #e5f2f7 !important; }
-label, h4 { color: #d1e7ee !important; }
-p, span, div, small { color: #c7dfe6 !important; }
-
-input, textarea, select {
-    background: rgba(255,255,255,0.95) !important;
-    color: black !important;
-    border-radius: 12px !important;
-    font-weight: 600;
-}
-
-button {
-    background: linear-gradient(135deg, #00c6ff, #0072ff) !important;
-    color: white !important;
-    border-radius: 14px !important;
-    height: 45px;
-    font-weight: bold;
-    border: none;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ---------------- SESSION ----------------
+# =====================================
+# SESSION STATE
+# =====================================
 if "user" not in st.session_state:
     st.session_state.user = None
 
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+if "role" not in st.session_state:
+    st.session_state.role = None
 
 if "page" not in st.session_state:
     st.session_state.page = "Home"
+    
+if "otp_sent" not in st.session_state:
+    st.session_state.otp_sent = False
 
 
-# =====================================================
-# NAVBAR (VISIBLE EVERYWHERE)
-# =====================================================
-show_navbar()
-st.divider()
+
+# =====================================
+# NAVBAR (ALWAYS VISIBLE)
+# =====================================
+navbar()
+
+# =====================================
+# ADMIN DIRECT DASHBOARD
+# =====================================
+if st.session_state.role == "admin":
+    admin_dashboard()
+    footer()
+    st.stop()
 
 
-# =====================================================
+# =====================================
 # PAGE ROUTING
-# =====================================================
+# =====================================
 
-# 🏠 HOME (PUBLIC)
+# -------- HOME --------
 if st.session_state.page == "Home":
-    show_home_page()
-    st.stop()
-
-# 👤 PROFILE (LOGIN PAGE)
-if st.session_state.page == "Profile":
-    if st.session_state.user is None:
-        show_auth_page()
-        st.stop()
-
-# 🛠 SERVICE (PUBLIC)
-if st.session_state.page == "Service":
-    st.markdown("## 🛠 Services")
-    st.write("AI-powered decision bias detection, scoring and recommendations.")
-    st.stop()
+    home_page()
 
 
-# =====================================================
-# DASHBOARD (ONLY AFTER LOGIN)
-# =====================================================
-if st.session_state.user is None:
-    st.stop()
+# -------- ABOUT --------
+elif st.session_state.page == "About":
+    about_page()
 
 
-# =====================================================
-# MAIN DASHBOARD
-# =====================================================
-st.title("🧠 AI Decision Bias Detection & Correction")
-st.write("Analyze decision patterns using AI + ML + Behavioral Science")
-st.divider()
+# -------- SERVICES --------
+elif st.session_state.page == "Services":
 
-st.subheader("📥 Decision Inputs")
-
-col1, col2 = st.columns(2)
-
-with col1:
-    salary = st.number_input("💰 Expected Salary", min_value=0, value=50000)
-
-with col2:
-    emotion = st.selectbox("😊 Emotional State", ["calm", "excited", "fear", "angry"])
-
-recent_event = st.checkbox("⚡ Recent Event Influence")
-ignore_options = st.checkbox("🚫 Ignored Alternative Options")
-
-analyze = st.button("🔍 Analyze Decision", use_container_width=True)
+    if st.session_state.user:
+        services_page(st.session_state.user)
+    else:
+        st.warning("🔐 Login required to access services")
 
 
-# =====================================================
-# NLP ANALYZER
-# =====================================================
-st.divider()
-st.subheader("📝 NLP Text Analyzer")
+# -------- PROFILE / AUTH --------
+elif st.session_state.page == "Profile":
 
-decision_text = st.text_area("Describe your decision")
+    # USER LOGGED IN
+    if st.session_state.user:
+        profile_page(st.session_state.user)
 
-if st.button("Analyze Text"):
-    if decision_text:
-        for tb in analyze_text_decision(decision_text):
-            st.write("•", tb)
+    # PUBLIC LOGIN / SIGNUP
+    else:
 
+        option = st.radio(
+            "Choose Option",
+            ["Login", "Signup"]
+        )
 
-# =====================================================
-# RESULT
-# =====================================================
-if analyze:
-    decision_data = {
-        "expected_salary": salary,
-        "recent_event_impact": recent_event,
-        "emotional_state": emotion,
-        "ignored_alternative_options": ignore_options
-    }
+        # LOGIN FLOW
+        if option == "Login":
 
-    bias_result = detect_bias(decision_data)
-    suggestions = suggest_corrections(bias_result)
-    score = calculate_decision_score(bias_result)
-    prediction = predict_decision(decision_data)
+            login_type = st.radio(
+                "Login Type",
+                ["User Login", "Admin Login"]
+            )
 
-    colA, colB = st.columns(2)
-    colA.metric("📊 Decision Score", f"{score}/100")
-    colB.metric("🤖 ML Classification", prediction)
+            if login_type == "User Login":
+                user_login_page()
 
-    st.progress(score / 100)
+            elif login_type == "Admin Login":
+                admin_login_page()
+
+        # SIGNUP FLOW
+        elif option == "Signup":
+            signup_page()
 
 
-# =====================================================
-# CHAT ASSISTANT
-# =====================================================
-st.divider()
-st.subheader("🤖 AI Decision Assistant")
 
-msg = st.text_input("Ask AI about your decision")
+# -------- FORGOT PASSWORD --------
+elif st.session_state.page == "ForgotPassword":
 
-if st.button("Send"):
-    reply = generate_chat_response(msg)
-    st.session_state.chat_history.append(("You", msg))
-    st.session_state.chat_history.append(("AI", reply))
+    forgot_password_page()
 
-for sender, text in st.session_state.chat_history:
-    st.write(f"**{sender}:** {text}")
+    if st.button("⬅ Back to Login", key="back_login"):
+        st.session_state.page = "Profile"
+        st.rerun()
 
 
-# =====================================================
-# HISTORY
-# =====================================================
-st.divider()
-st.subheader("📜 Decision History")
-
-history_df = load_history(st.session_state.user)
-
-if not history_df.empty:
-    st.dataframe(history_df, use_container_width=True)
-else:
-    st.info("No history yet")
+# =====================================
+# FOOTER
+# =====================================
+footer()
