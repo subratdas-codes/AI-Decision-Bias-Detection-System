@@ -47,6 +47,8 @@ from services.career import show_career_service
 from services.hr import show_hr_service
 from services.social import show_social_service
 from services.policy import show_policy_service
+from ui.auth_pages.forgot_password_page import forgot_password_page
+
 
 
 
@@ -166,6 +168,14 @@ button {
 # =====================================================
 show_navbar()
 st.divider()
+
+
+# =====================================================
+# 🔧 FORGOT PASSWORD ROUTE (ADDED)
+# =====================================================
+if st.session_state.page == "forgot_password":
+    forgot_password_page()
+    st.stop()
 
 
 # =====================================================

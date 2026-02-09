@@ -5,6 +5,7 @@ from utils.auth_manager import (
     get_username_by_email,
     reset_password_by_email
 )
+from ui.components.footer import footer
 
 
 def forgot_password_page():
@@ -20,7 +21,6 @@ def forgot_password_page():
     if "generated_otp" not in st.session_state:
         st.session_state.generated_otp = None
 
-
     # =====================================
     # SEND OTP
     # =====================================
@@ -28,9 +28,9 @@ def forgot_password_page():
 
         if st.button("Send OTP"):
 
-            username = get_username_by_email(email)
+            user = get_username_by_email(email)
 
-            if username:
+            if user and len(user) > 0:
 
                 otp = generate_otp()
 
@@ -44,7 +44,6 @@ def forgot_password_page():
 
             else:
                 st.error("Email not registered")
-
 
     # =====================================
     # OTP VERIFICATION
@@ -70,6 +69,9 @@ def forgot_password_page():
                         st.session_state.otp_sent = False
                         st.session_state.generated_otp = None
 
+                        st.session_state.page = "Profile"
+                        st.rerun()
+
                     else:
                         st.error("Password Reset Failed")
 
@@ -77,3 +79,12 @@ def forgot_password_page():
                     st.error("Invalid OTP")
 
         # -------- BACK BUTTON --------
+        with col2:
+            if st.button("⬅ Back to Login"):
+                st.session_state.page = "Profile"
+                st.session_state.otp_sent = False
+                st.session_state.generated_otp = None
+                st.rerun()
+
+    # -------- FOOTER --------
+    footer()

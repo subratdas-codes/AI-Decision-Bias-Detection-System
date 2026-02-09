@@ -1,28 +1,34 @@
 import sqlite3
 import hashlib
+import os
 
 # =====================================
-<<<<<<< Updated upstream
-# DATABASE CONNECTION
+# 📂 DATABASE PATH (FIXED)
 # =====================================
-=======
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(BASE_DIR, "users.db")
+
+# =====================================
+# 🔐 PASSWORD HASH
+# =====================================
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+# =====================================
 # ⭐ ADMIN CREDENTIALS (FIXED)
 # =====================================
-
 ADMIN_CREDENTIALS = {
     "user_id": "Admin",
     "email": "byteconnect360@gmail.com",
     "mobile": "9090535566",
-    "password": hashlib.sha256("admin123".encode()).hexdigest()
+    "password": hash_password("admin123")
 }
 
-
-
-# -------- DATABASE CONNECTION --------
->>>>>>> Stashed changes
-conn = sqlite3.connect("users.db", check_same_thread=False)
+# =====================================
+# 🗄 DATABASE CONNECTION
+# =====================================
+conn = sqlite3.connect(DB_PATH, check_same_thread=False)
 cursor = conn.cursor()
-
 
 # =====================================
 # CREATE USERS TABLE
@@ -36,14 +42,6 @@ CREATE TABLE IF NOT EXISTS users(
 )
 """)
 conn.commit()
-
-
-# =====================================
-# PASSWORD HASH
-# =====================================
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
-
 
 # =====================================
 # CHECK USER EXISTS
@@ -67,38 +65,31 @@ def user_exists(username=None, email=None, mobile=None):
 
     return False
 
-
 # =====================================
 # SIGNUP
 # =====================================
 def signup(username, email, mobile, password):
 
     try:
-        cursor.execute("""
-        INSERT INTO users VALUES (?, ?, ?, ?)
-        """, (
-            username,
-            email,
-            mobile,
-            hash_password(password)
-        ))
-
+        cursor.execute(
+            "INSERT INTO users VALUES (?, ?, ?, ?)",
+            (username, email, mobile, hash_password(password))
+        )
         conn.commit()
         return True
 
     except sqlite3.IntegrityError:
         return False
 
-
 # =====================================
-# LOGIN
+# LOGIN (USERNAME / EMAIL / MOBILE)
 # =====================================
 def login(identifier, password):
 
     cursor.execute("""
-    SELECT username FROM users
-    WHERE (username=? OR email=? OR mobile=?)
-    AND password=?
+        SELECT username FROM users
+        WHERE (username=? OR email=? OR mobile=?)
+        AND password=?
     """, (
         identifier,
         identifier,
@@ -109,19 +100,17 @@ def login(identifier, password):
     result = cursor.fetchone()
     return result[0] if result else None
 
-
 # =====================================
 # GET USER DETAILS
 # =====================================
 def get_user_details(username):
 
     cursor.execute("""
-    SELECT username, email, mobile
-    FROM users WHERE username=?
+        SELECT username, email, mobile
+        FROM users WHERE username=?
     """, (username,))
 
     return cursor.fetchone()
-
 
 # =====================================
 # CHANGE PASSWORD
@@ -136,19 +125,13 @@ def change_password(username, old_pass, new_pass):
     result = cursor.fetchone()
 
     if result and result[0] == hash_password(old_pass):
-
         cursor.execute("""
-        UPDATE users SET password=? WHERE username=?
-        """, (
-            hash_password(new_pass),
-            username
-        ))
-
+            UPDATE users SET password=? WHERE username=?
+        """, (hash_password(new_pass), username))
         conn.commit()
         return True
 
     return False
-
 
 # =====================================
 # UPDATE EMAIL
@@ -156,16 +139,15 @@ def change_password(username, old_pass, new_pass):
 def update_email(username, new_email):
 
     try:
-        cursor.execute("""
-        UPDATE users SET email=? WHERE username=?
-        """, (new_email, username))
-
+        cursor.execute(
+            "UPDATE users SET email=? WHERE username=?",
+            (new_email, username)
+        )
         conn.commit()
         return True
 
     except sqlite3.IntegrityError:
         return False
-
 
 # =====================================
 # UPDATE MOBILE
@@ -173,28 +155,26 @@ def update_email(username, new_email):
 def update_mobile(username, new_mobile):
 
     try:
-        cursor.execute("""
-        UPDATE users SET mobile=? WHERE username=?
-        """, (new_mobile, username))
-
+        cursor.execute(
+            "UPDATE users SET mobile=? WHERE username=?",
+            (new_mobile, username)
+        )
         conn.commit()
         return True
 
     except sqlite3.IntegrityError:
         return False
 
-
 # =====================================
 # DELETE USER ACCOUNT
 # =====================================
 def delete_user_account(username):
 
-    cursor.execute("""
-    DELETE FROM users WHERE username=?
-    """, (username,))
-
+    cursor.execute(
+        "DELETE FROM users WHERE username=?",
+        (username,)
+    )
     conn.commit()
-
 
 # =====================================
 # GET USERNAME BY EMAIL
@@ -205,49 +185,41 @@ def get_username_by_email(email):
         "SELECT username FROM users WHERE email=?",
         (email,)
     )
-
-<<<<<<< Updated upstream
-    result = cursor.fetchone()
-    return result[0] if result else None
-
-
-# =====================================
-# RESET PASSWORD USING EMAIL
-# =====================================
-def reset_password_by_email(email, new_password):
-
-    try:
-        cursor.execute("""
-        UPDATE users SET password=? WHERE email=?
-        """, (
-            hash_password(new_password),
-            email
-        ))
-
-        conn.commit()
-        return True
-
-    except:
-        return False
-=======
     return cursor.fetchall()
 
 # =====================================
 # ⭐ ADMIN LOGIN (SEPARATE FROM USERS)
 # =====================================
-
 def admin_login(user_id, email, mobile, password):
 
-    hashed_pass = hashlib.sha256(password.encode()).hexdigest()
-
-    if (
+    return (
         user_id == ADMIN_CREDENTIALS["user_id"]
         and email == ADMIN_CREDENTIALS["email"]
         and mobile == ADMIN_CREDENTIALS["mobile"]
-        and hashed_pass == ADMIN_CREDENTIALS["password"]
-    ):
+        and hash_password(password) == ADMIN_CREDENTIALS["password"]
+    )
+
+# =====================================
+# 🔑 RESET PASSWORD BY EMAIL (ADDED)
+# =====================================
+def reset_password_by_email(email, new_password):
+    """
+    Reset user password using email (used in Forgot Password flow)
+    """
+
+    try:
+        cursor.execute(
+            "UPDATE users SET password=? WHERE email=?",
+            (hash_password(new_password), email)
+        )
+        conn.commit()
+
+        # Check if any row was updated
+        if cursor.rowcount == 0:
+            return False
+
         return True
 
-    return False
-
->>>>>>> Stashed changes
+    except Exception as e:
+        print("Reset password error:", e)
+        return False

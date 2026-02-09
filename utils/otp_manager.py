@@ -4,50 +4,35 @@ import os
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
-SENDER_EMAIL = os.getenv("EMAIL_USER")
-APP_PASSWORD = os.getenv("EMAIL_PASS")
-
-
 # =====================================
-# GENERATE OTP
+# OTP GENERATION
 # =====================================
 def generate_otp():
     return str(random.randint(100000, 999999))
 
 
 # =====================================
-# SEND EMAIL OTP
+# SEND OTP VIA EMAIL
 # =====================================
-def send_email_otp(receiver_email, otp):
-
-    subject = "AI Decision System OTP Verification"
-
-    body = f"""
-Hello,
-
-Your OTP for verification is:
-
-OTP: {otp}
-
-This OTP will expire in 5 minutes.
-Do not share this OTP with anyone.
-
-Thank You,
-AI Decision System
-"""
-
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = SENDER_EMAIL
-    msg["To"] = receiver_email
-
+def send_email_otp(to_email, otp):
     try:
+        sender_email = os.getenv("EMAIL_USER")
+        sender_password = os.getenv("EMAIL_PASS")
+
+        if not sender_email or not sender_password:
+            print("Email credentials not found in .env")
+            return False
+
+        msg = MIMEText(f"Your OTP is: {otp}")
+        msg["Subject"] = "Your OTP Verification Code"
+        msg["From"] = sender_email
+        msg["To"] = to_email
+
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
-        server.login(SENDER_EMAIL, APP_PASSWORD)
+        server.login(sender_email, sender_password)
         server.send_message(msg)
         server.quit()
 
@@ -56,3 +41,12 @@ AI Decision System
     except Exception as e:
         print("Email OTP Error:", e)
         return False
+
+
+# =====================================
+# DUMMY MOBILE OTP (DISABLED FOR NOW)
+# =====================================
+def send_mobile_otp(mobile, otp):
+    # Not implemented (future feature)
+    print(f"[DEBUG] OTP {otp} sent to mobile {mobile}")
+    return True

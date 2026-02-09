@@ -1,15 +1,24 @@
 import streamlit as st
 
-
-def footer():
-
-    st.divider()
-
+# =====================================
+# 🔻 FOOTER RENDER FUNCTION (ADDED)
+# =====================================
+def render_footer():
+    st.markdown("---")
     st.markdown(
-        """
-        <center style="color:white">
-        © 2026 AI Decision Intelligence System | College Project
-        </center>
-        """,
+        "<p style='text-align:center;'>© PHB2 | AI Decision Bias Detection</p>",
+        unsafe_allow_html=True
+    )
+import streamlit as st
+
+# =====================================
+# 🔻 GLOBAL FOOTER COMPONENT
+# =====================================
+def footer():
+    st.markdown("---")
+    st.markdown(
+        "<p style='text-align:center; font-size:14px;'>"
+        "© PHB2 | AI Decision Bias Detection System"
+        "</p>",
         unsafe_allow_html=True
     )
