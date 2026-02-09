@@ -49,11 +49,7 @@ from services.social import show_social_service
 from services.policy import show_policy_service
 from ui.auth_pages.forgot_password_page import forgot_password_page
 
-
-
-
-
-
+from ui.components.footer import footer
 
 
 # ---------------- PAGE CONFIG ----------------
@@ -163,6 +159,7 @@ button {
 """, unsafe_allow_html=True)
 
 
+
 # =====================================================
 # NAVBAR (VISIBLE EVERYWHERE)
 # =====================================================
@@ -171,10 +168,11 @@ st.divider()
 
 
 # =====================================================
-# 🔧 FORGOT PASSWORD ROUTE (ADDED)
+# 🔐 FORGOT PASSWORD ROUTE
 # =====================================================
 if st.session_state.page == "forgot_password":
     forgot_password_page()
+    footer()
     st.stop()
 
 
@@ -188,6 +186,7 @@ if st.session_state.page == "Admin":
         admin_dashboard()
     else:
         admin_login_page()
+    footer()
     st.stop()
 
 # ---- ABOUT ----
@@ -197,11 +196,13 @@ if st.session_state.page == "About":
         "PHB analyzes human decision-making, detects cognitive & emotional biases, "
         "and provides AI-driven guidance for better choices."
     )
+    footer()
     st.stop()
 
-# ---- HOME (PUBLIC) ----
+# ---- HOME ----
 if st.session_state.page == "Home":
     show_home_page()
+    footer()
     st.stop()
 
 # ---- PROFILE (LOGIN / SIGNUP) ----
@@ -211,67 +212,68 @@ if st.session_state.page == "Profile":
     else:
         st.session_state.page = "Service"
         st.rerun()
+    footer()
     st.stop()
 
-# 🛠 SERVICE (ONLY AFTER LOGIN)
+# ---- SERVICE ----
 if st.session_state.page == "Service":
     if st.session_state.user is None:
         st.session_state.page = "Profile"
         st.rerun()
     else:
         show_service_page()
+    footer()
     st.stop()
 
-# 💰 SALARY DECISION PAGE
+# ---- SALARY ----
 if st.session_state.page == "salary":
     if st.session_state.user is None:
         st.session_state.page = "Profile"
         st.rerun()
     else:
         show_salary_page()
+    footer()
     st.stop()
 
-# 🎓 CAREER DECISION SERVICE
+# ---- CAREER ----
 if st.session_state.page == "career":
     if st.session_state.user is None:
         st.session_state.page = "Profile"
         st.rerun()
     else:
         show_career_service()
+    footer()
     st.stop()
 
-# 🧑‍💼 HR HIRING BIAS SERVICE
+# ---- HR ----
 if st.session_state.page == "hr":
     if st.session_state.user is None:
         st.session_state.page = "Profile"
         st.rerun()
     else:
         show_hr_service()
+    footer()
     st.stop()
 
-# 🌍 SOCIAL DECISION SERVICE
+# ---- SOCIAL ----
 if st.session_state.page == "social":
     if st.session_state.user is None:
         st.session_state.page = "Profile"
         st.rerun()
     else:
         show_social_service()
+    footer()
     st.stop()
 
-# 🏛 POLICY DECISION SERVICE
+# ---- POLICY ----
 if st.session_state.page == "policy":
     if st.session_state.user is None:
         st.session_state.page = "Profile"
         st.rerun()
     else:
         show_policy_service()
+    footer()
     st.stop()
-
-
-
-
-
-
 
 
 # =====================================================
@@ -370,3 +372,9 @@ if not history_df.empty:
     st.dataframe(history_df, use_container_width=True)
 else:
     st.info("No history yet")
+
+
+# =====================================================
+# CUSTOM FOOTER (NOT STREAMLIT FOOTER)
+# =====================================================
+footer()

@@ -1,7 +1,9 @@
 import streamlit as st
 import time
-from utils.auth_manager import signup, login
+
+from utils.auth_manager import signup, login, admin_login
 from utils.otp_manager import generate_otp, send_email_otp, send_mobile_otp
+from ui.components.footer import footer
 
 
 def show_auth_page():
@@ -22,6 +24,7 @@ def show_auth_page():
     </div>
     """, unsafe_allow_html=True)
 
+    # ✅ OPTION DEFINED ONCE, SAFELY
     option = st.selectbox("Select Option", ["Login", "Signup"])
 
     # ================= SIGNUP =================
@@ -76,17 +79,27 @@ def show_auth_page():
         identifier = st.text_input("Username / Email / Mobile")
         password = st.text_input("Password", type="password")
 
-        if st.button("Login"):
-            user = login(identifier, password)
-            if user:
-                st.session_state.user = user
-                st.session_state.page = "Home"
-                st.rerun()
-            else:
-                st.error("Invalid credentials")
+        col1, col2 = st.columns(2)
 
+        with col1:
+            if st.button("Login"):
+                user = login(identifier, password)
+                if user:
+                    st.session_state.user = user
+                    st.session_state.page = "Home"
+                    st.rerun()
+                else:
+                    st.error("Invalid credentials")
+
+        with col2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Forgot Password"):
+                st.session_state.page = "forgot_password"
+                st.rerun()
+
+    footer()
     st.stop()
-from utils.auth_manager import admin_login
+
 
 def admin_login_page():
     st.subheader("🔐 Admin Login")
