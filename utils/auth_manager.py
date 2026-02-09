@@ -231,12 +231,12 @@ def admin_set_ban_status(username, status):
     )
     conn.commit()
 
-# =====================================
-# ✏️ ADMIN: UPDATE USER ROLE
-# =====================================
-def admin_update_role(username, role):
-    cursor.execute(
-        "UPDATE users SET role=? WHERE username=?",
-        (role, username)
-    )
-    conn.commit()
+        # Check if any row was updated
+        if cursor.rowcount == 0:
+            return False
+
+        return True
+
+    except Exception as e:
+        print("Reset password error:", e)
+        return False
