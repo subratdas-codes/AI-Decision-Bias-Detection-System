@@ -2,8 +2,24 @@ import sqlite3
 import hashlib
 
 # =====================================
+<<<<<<< Updated upstream
 # DATABASE CONNECTION
 # =====================================
+=======
+# ⭐ ADMIN CREDENTIALS (FIXED)
+# =====================================
+
+ADMIN_CREDENTIALS = {
+    "user_id": "Admin",
+    "email": "byteconnect360@gmail.com",
+    "mobile": "9090535566",
+    "password": hashlib.sha256("admin123".encode()).hexdigest()
+}
+
+
+
+# -------- DATABASE CONNECTION --------
+>>>>>>> Stashed changes
 conn = sqlite3.connect("users.db", check_same_thread=False)
 cursor = conn.cursor()
 
@@ -190,6 +206,7 @@ def get_username_by_email(email):
         (email,)
     )
 
+<<<<<<< Updated upstream
     result = cursor.fetchone()
     return result[0] if result else None
 
@@ -212,3 +229,25 @@ def reset_password_by_email(email, new_password):
 
     except:
         return False
+=======
+    return cursor.fetchall()
+
+# =====================================
+# ⭐ ADMIN LOGIN (SEPARATE FROM USERS)
+# =====================================
+
+def admin_login(user_id, email, mobile, password):
+
+    hashed_pass = hashlib.sha256(password.encode()).hexdigest()
+
+    if (
+        user_id == ADMIN_CREDENTIALS["user_id"]
+        and email == ADMIN_CREDENTIALS["email"]
+        and mobile == ADMIN_CREDENTIALS["mobile"]
+        and hashed_pass == ADMIN_CREDENTIALS["password"]
+    ):
+        return True
+
+    return False
+
+>>>>>>> Stashed changes
