@@ -25,6 +25,19 @@ if "page" not in st.session_state:
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
+# =====================================
+# 🔁 SESSION COMPATIBILITY BRIDGE (ADDED)
+# =====================================
+# This bridges your OLD system with NEW admin panel
+if "is_admin" not in st.session_state:
+    st.session_state.is_admin = st.session_state.admin_logged_in
+
+if "is_user" not in st.session_state:
+    st.session_state.is_user = st.session_state.user is not None
+
+if "username" not in st.session_state:
+    st.session_state.username = st.session_state.user
+
 
 # =====================================
 # IMPORTS
